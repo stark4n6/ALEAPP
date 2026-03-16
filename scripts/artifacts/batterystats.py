@@ -6,7 +6,7 @@ __artifacts_v2__ = {
         "author": "Marco Neumann {kalinko@be-binary.de}",
         "version": "0.0.1",
         "creation_date": "2026-03-12",
-        "last_update_date": "2026-03-14",
+        "last_update_date": "2026-03-16",
         "requirements": "xmltodict, xml",
         "category": "Android Battery Statistics",
         "notes": "",
@@ -19,7 +19,7 @@ __artifacts_v2__ = {
 
 import xmltodict
 import xml.etree.ElementTree as etree
-from scripts.ilapfuncs import artifact_processor, convert_unix_ts_to_utc, abxread
+from scripts.ilapfuncs import artifact_processor, convert_unix_ts_to_utc, abxread, checkabx
 
 @artifact_processor
 def battery_stats_daily(files_found, _report_folder, _seeker, _wrap_text):
@@ -33,7 +33,12 @@ def battery_stats_daily(files_found, _report_folder, _seeker, _wrap_text):
     data_list = []
 
     multi_root = False
-    tree = abxread(abx_file, multi_root)
+    if (checkabx(abx_file)):
+        multi_root = False
+        tree = abxread(abx_file, multi_root)
+    else:
+        tree = etree.parse(abx_file)
+    
     xlmstring = (etree.tostring(tree.getroot()).decode())
     doc = xmltodict.parse(xlmstring)
 
