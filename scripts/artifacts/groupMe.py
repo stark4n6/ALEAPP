@@ -93,7 +93,7 @@ def get_groupMe(files_found, report_folder, seeker, wrap_text):
         messages.location_name AS "Location Name"
         FROM
         messages
-        JOIN groups ON groups.group_id=messages.conversation_id
+        LEFT JOIN groups ON groups.group_id=messages.conversation_id
         ORDER BY "Message Time" ASC
         ''')
 
