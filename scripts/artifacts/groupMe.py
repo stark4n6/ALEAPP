@@ -4,12 +4,8 @@
 # Version: 0.1
 # Requirements:  None
 
-import os
-import sqlite3
-import textwrap
-
 from scripts.artifact_report import ArtifactHtmlReport
-from scripts.ilapfuncs import logfunc, tsv, timeline, is_platform_windows, open_sqlite_db_readonly
+from scripts.ilapfuncs import logfunc, tsv, timeline, open_sqlite_db_readonly
 
 def get_groupMe(files_found, report_folder, seeker, wrap_text):
     
@@ -93,7 +89,7 @@ def get_groupMe(files_found, report_folder, seeker, wrap_text):
         messages.location_name AS "Location Name"
         FROM
         messages
-        JOIN groups ON groups.group_id=messages.conversation_id
+        LEFT JOIN groups ON groups.group_id=messages.conversation_id
         ORDER BY "Message Time" ASC
         ''')
 
