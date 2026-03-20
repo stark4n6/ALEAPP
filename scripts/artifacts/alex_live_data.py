@@ -121,6 +121,22 @@ __artifacts_v2__ = {
         "output_types": ["html", "lava", "tsv"],
         "artifact_icon": "user"
     },
+    "alex_live_batterystats": {
+        "name": "Dumpsys - Batterystats",
+        "description": "Outputs the Batterystats \
+            from the Dumpsys log of an \
+                ALEX PRFS backup.",
+        "author": "@C_Peter",
+        "creation_date": "2026-03-19",
+        "last_update_date": "2026-03-19",
+        "requirements": "none",
+        "category": "ALEX Live Data",
+        "notes": "",
+        "paths": ('*/extra/dumpsys_*.txt',
+            '*/device_info_alex.json'),
+        "output_types": ["html", "lava", "tsv"],
+        "artifact_icon": "battery-charging"
+    },
     "alex_live_logcat": {
         "name": "Logcat",
         "description": "Parses the Logcat \
@@ -158,6 +174,13 @@ def parse_timestamp(s, device_ts):
         return None
     s = s.strip()
     s = s.translate(trans)
+    # Dumpsys RESET:TIME: format
+    try:
+        dt = datetime.datetime.strptime(s, "%Y-%m-%d-%H-%M-%S")
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+        return int(dt.timestamp())
+    except (ValueError, IndexError, TypeError):
+        pass
     # ISO format: 2026-02-02T05:37:49.732
     try:
         dt = datetime.datetime.strptime(s[:19], "%Y-%m-%dT%H:%M:%S")
@@ -195,7 +218,7 @@ def parse_timestamp(s, device_ts):
             full_ts = f"{year}-{month:02d}-{day:02d}{s[5:]}"
             dt = datetime.datetime.strptime(full_ts, "%Y-%m-%d %H:%M:%S.%f")
             dt = dt.replace(tzinfo=datetime.timezone.utc)
-            return int(dt.timestamp())
+            return float(dt.timestamp())
     except (ValueError, IndexError, TypeError):
         return None
     # Short format: date only MM-DD
@@ -214,6 +237,35 @@ def parse_timestamp(s, device_ts):
 
     except (ValueError, IndexError, TypeError):
         return None
+
+# Time-Offset Helper
+def parse_relative_time(s):
+    """Function to convert time-offsets to seconds and milliseconds (as float)"""
+    pattern = re.compile(
+        r'\+?'
+        r'(?:(\d+)d)?'
+        r'(?:(\d+)h)?'
+        r'(?:(\d+)m(?!s))?'
+        r'(?:(\d+)s)?'
+        r'(?:(\d+)ms)?'
+    )
+    match = pattern.fullmatch(s.strip())
+    if not match:
+        return 0
+    d, h, m_, s_, ms = match.groups()
+    d = int(d) if d else 0
+    h = int(h) if h else 0
+    m_ = int(m_) if m_ else 0
+    s_ = int(s_) if s_ else 0
+    ms = int(ms) if ms else 0
+    total_ms = (
+        d * 86400000 +
+        h * 3600000 +
+        m_ * 60000 +
+        s_ * 1000 +
+        ms
+    )
+    return total_ms / 1000
 
 # Helper to split the Dumpsys Output
 def split_dumpsys_log(dumpsys_file) -> dict:
@@ -398,7 +450,7 @@ def alex_live_wifi_conf_net(files_found, _report_folder, _seeker, _wrap_text):
         if current_key is not None:
             data_list.append((net_id, create_time, last_connected_time, ssid,
                             bssid, dsble, hidden, randomized_mac, autojoin))
-            
+          
     data_headers = ('ID', ('Creation Time', 'datetime'), ('Last Connected', 'datetime'), 'SSID', 'BSSID', 'DSBLE', 'Hidden', 'Random MAC', 'Autojoin')
 
     return data_headers, data_list, source_path
@@ -473,7 +525,6 @@ def alex_live_usagestats_yearly(files_found, _report_folder, _seeker, _wrap_text
 
         for line in us_yearly.splitlines():
             stripped = line.strip()
-            
             if not stripped.startswith("package=") or "lastTime" not in stripped:
                 continue
 
@@ -679,6 +730,154 @@ def alex_live_account(files_found, _report_folder, _seeker, _wrap_text):
     data_headers = ('Type', 'Name')
     return data_headers, data_list, source_path
 
+# Dumpsys - Batterystats
+@artifact_processor
+def alex_live_batterystats(files_found, _report_folder, _seeker, _wrap_text):
+    """Parses the dumpsys batterystats dump for entires"""
+    source_path = ""
+    alex_device = ""
+    for file_found in files_found:
+        if "dumpsys_" in str(file_found):
+            source_path = file_found
+        elif "device_info_alex.json" in str(file_found):
+            alex_device = file_found
+    software = None
+    try:
+        with open(alex_device, encoding="utf-8") as info_file:
+            info_data = json.load(info_file)
+            software = next(
+                (entry["Software"] for entry in info_data if "Software" in entry),
+                None)
+    except (OSError, UnicodeDecodeError):
+        pass
+    data_list = []
+    split_dumpsys_log(source_path)
+    batts_dump, batts_ts = _DUMPSYS_DICT.get("batterystats", (None, None))
+    if batts_dump is None:
+        logfunc('Dumpsys does not include an "batterystats" part.')
+    else:
+        logtext = (
+            'Dumpsys does include a \"batterystats\" part without timestamp.'
+            if batts_ts is None
+            else f'Dumpsys does include a \"batterystats\" part with timestamp: {str(batts_ts)}'
+        )
+        logfunc(logtext)
+
+        bs_dict = {4:  {30: 'WAKE_LOCK', 29: 'SENSOR_ON', 28: 'GPS_ON', 
+                        27: 'PHONE_SCANNING', 26: 'WIFI_RUNNING', 25: 'WIFI_FULL_LOCK', 
+                        24: 'WIFI_SCAN_LOCK', 23: 'WIFI_MULTICAST_ON', 22: 'AUDIO_ON', 
+                        21: 'VIDEO_ON', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+                        18: 'PHONE_IN_CALL', 17: 'WIFI_ON', 16: 'BLUETOOTH_ON'},
+                   5:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON', 
+                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_MULTICAST_ON', 
+                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON', 
+                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+                        18: 'PHONE_IN_CALL', 16: 'BLUETOOTH_ON'},
+                   6:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON', 
+                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_RADIO_ACTIVE', 
+                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON', 
+                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+                        16: 'WIFI_MULTICAST_ON'},
+                   10: {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON', 
+                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_RADIO_ACTIVE', 
+                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON', 
+                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+                        16: 'WIFI_MULTICAST_ON'} 
+                    }
+
+        if software:
+            major = int(str(software).split('.', maxsplit=1)[0])
+            mask_versions = sorted(bs_dict.keys())
+            selected_v = None
+            for v in mask_versions:
+                if major >= v:
+                    selected_v = v
+                else:
+                    break
+        else:
+            selected_v = None
+        BATTERY_RE = re.compile(r'\s(\d{3})\s')
+        HEX_RE = re.compile(r'\s([0-9a-fA-F]{8})\s')
+        reset_time = None
+        lines = batts_dump.splitlines()
+        for line in lines[:5]:
+            if "TIME:" in line:
+                ts_str = line.split("TIME:")[-1].strip()
+                reset_time = parse_timestamp(ts_str, _DEVICE_TIME)
+                break
+        current_ts = None
+
+        rel_offset = 0
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            current_ts = None
+            time_part = None
+            # new format - absolute times
+            if re.match(r'^\d{2}-\d{2} ', line):
+                parts = line.split()
+                ts_str = parts[0] + " " + parts[1]
+                current_ts = parse_timestamp(ts_str, _DEVICE_TIME)
+                out_time = datetime.datetime.fromtimestamp(current_ts / 1000, tz=datetime.timezone.utc)
+                battery = parts[2] if len(parts) > 2 else None
+                if not (battery and battery.strip().isdigit() and len(battery.strip()) == 3):
+                    continue
+                hex_mask = parts[3] if len(parts) > 3 else None
+                message = " ".join(parts[4:]) if len(parts) > 4 else ""
+            # old format - relative times
+            elif line.startswith("+") or re.match(r'^0(\s|$)', line):
+                parts = line.split()
+                time_part = parts[0]
+                rel_ms = parse_relative_time(time_part)
+                battery_match = BATTERY_RE.search(line)
+                battery = battery_match.group(1) if battery_match else None
+                if not (battery and battery.strip().isdigit() and len(battery.strip()) == 3):
+                    if "TIME:" in line:
+                        time_str = line.split("TIME:")[1].strip()
+                        abs_time = parse_timestamp(time_str, _DEVICE_TIME)
+                        if abs_time:
+                            reset_time = abs_time
+                            rel_offset = rel_ms
+                    continue
+                if reset_time is not None:
+                    current_ts = reset_time + rel_ms - rel_offset
+                else:
+                    current_ts = None
+                hex_match = HEX_RE.search(line)
+                hex_mask = hex_match.group(1) if hex_match else None
+                if hex_match:
+                    message = line.split(hex_mask, 1)[1].strip()
+                else:
+                    message = ""
+            else:
+                # ignoring multiline - mostly Stats messages
+                continue
+            if current_ts:
+                out_time = datetime.datetime.fromtimestamp(current_ts, tz=datetime.timezone.utc)
+            elif time_part:
+                out_time = time_part
+            else:
+                out_time = None
+            if isinstance(hex_mask, str):
+                bmask = int(hex_mask, 16)
+            elif isinstance(hex_mask, int):
+                bmask = hex_mask
+            else:
+                bmask = None
+            if selected_v and bmask:
+                b_mapping = bs_dict.get(selected_v)
+                active_bits = []
+                for bit, name in b_mapping.items():
+                    if bmask & (1 << bit):
+                        active_bits.append(name)
+                stat1 = ", ".join(active_bits)
+            else:
+                stat1 = None
+
+            data_list.append((out_time, battery, hex_mask, stat1, message))
+    data_headers = (('Time', 'datetime'), 'Battery Level', 'Mask', 'States (from Mask)', 'Message')
+    return data_headers, data_list, source_path
 
 # App Ops
 @artifact_processor
