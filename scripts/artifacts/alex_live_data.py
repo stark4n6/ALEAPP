@@ -763,26 +763,26 @@ def alex_live_batterystats(files_found, _report_folder, _seeker, _wrap_text):
         )
         logfunc(logtext)
 
-        bs_dict = {4:  {30: 'WAKE_LOCK', 29: 'SENSOR_ON', 28: 'GPS_ON', 
-                        27: 'PHONE_SCANNING', 26: 'WIFI_RUNNING', 25: 'WIFI_FULL_LOCK', 
-                        24: 'WIFI_SCAN_LOCK', 23: 'WIFI_MULTICAST_ON', 22: 'AUDIO_ON', 
-                        21: 'VIDEO_ON', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+        bs_dict = {4:  {30: 'WAKE_LOCK', 29: 'SENSOR_ON', 28: 'GPS_ON',
+                        27: 'PHONE_SCANNING', 26: 'WIFI_RUNNING', 25: 'WIFI_FULL_LOCK',
+                        24: 'WIFI_SCAN_LOCK', 23: 'WIFI_MULTICAST_ON', 22: 'AUDIO_ON',
+                        21: 'VIDEO_ON', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED',
                         18: 'PHONE_IN_CALL', 17: 'WIFI_ON', 16: 'BLUETOOTH_ON'},
-                   5:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON', 
-                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_MULTICAST_ON', 
-                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON', 
-                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+                   5:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON',
+                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_MULTICAST_ON',
+                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON',
+                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED',
                         18: 'PHONE_IN_CALL', 16: 'BLUETOOTH_ON'},
-                   6:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON', 
-                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_RADIO_ACTIVE', 
-                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON', 
-                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
+                   6:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON',
+                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_RADIO_ACTIVE',
+                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON',
+                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED',
                         16: 'WIFI_MULTICAST_ON'},
-                   10: {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON', 
-                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_RADIO_ACTIVE', 
-                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON', 
-                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED', 
-                        16: 'WIFI_MULTICAST_ON'} 
+                   9:  {31: 'CPU_RUNNING', 30: 'WAKE_LOCK', 29: 'GPS_ON',
+                        28: 'WIFI_FULL_LOCK', 27: 'WIFI_SCAN', 26: 'WIFI_RADIO_ACTIVE',
+                        25: 'MOBILE_RADIO_ACTIVE', 23: 'SENSOR_ON', 22: 'AUDIO_ON',
+                        21: 'PHONE_SCANNING', 20: 'SCREEN_ON', 19: 'BATTERY_PLUGGED',
+                        18: 'SCREEN_DOZE', 16: 'WIFI_MULTICAST_ON'}
                     }
 
         if software:
