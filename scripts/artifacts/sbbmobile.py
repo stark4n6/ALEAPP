@@ -56,7 +56,7 @@ __artifacts_v2__ = {
 }
 
 from scripts.ilapfuncs import artifact_processor, get_file_path, \
-    get_sqlite_db_records, logfunc, open_sqlite_db_readonly
+    get_sqlite_db_records, logfunc
 
 @artifact_processor
 def cff_purchased_tickets(files_found, _report_folder, _seeker, _wrap_text):
