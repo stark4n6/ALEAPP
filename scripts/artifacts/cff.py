@@ -61,12 +61,8 @@ from scripts.ilapfuncs import artifact_processor, get_file_path, \
 @artifact_processor
 def cff_purchased_tickets(files_found, _report_folder, _seeker, _wrap_text):
     source_path = get_file_path(files_found, "SbbMobile.db")
-    data_list = []
 
-    for file_found in files_found:
-        file_found = str(file_found)
-
-    if files_found[0].endswith('SbbMobile.db'):
+    if  not source_path:
         query = '''
             SELECT
                 traveler,
@@ -86,11 +82,9 @@ def cff_purchased_tickets(files_found, _report_folder, _seeker, _wrap_text):
         '''
 
         data_headers = ('Traveler', "Valid from", "Valid until", "is Refunded", "Payment method", "Ticket description", "Ticket departure", "Ticket destination")
-        db_records = get_sqlite_db_records(files_found[0], query)
+        db_records = get_sqlite_db_records(source_path, query)
 
-        for record in db_records:
-            data_list.append(record)
-        return data_headers, data_list, source_path
+        return data_headers, db_records, source_path
     else:
         logfunc('No Data')
 
@@ -99,10 +93,7 @@ def cff_searched_places(files_found, _report_folder, _seeker, _wrap_text):
     source_path = get_file_path(files_found, "SbbMobile.db")
     data_list = []
 
-    for file_found in files_found:
-        file_found = str(file_found)
-
-    if files_found[0].endswith('SbbMobile.db'):
+    if  not source_path:
         query = '''
             SELECT
                 datetime(timestamp/1000, 'unixepoch', 'localtime'),
@@ -125,11 +116,12 @@ def cff_searched_places(files_found, _report_folder, _seeker, _wrap_text):
         '''
 
         data_headers = ('Searched timestamp', "Title", "Is favorite", "Type", "location of places (link)")
-        db_records = get_sqlite_db_records(files_found[0], query)
+        db_records = get_sqlite_db_records(source_path, query)
 
-        for record in db_records:
-            tmp = coordinate_to_osm(record[4], record[5])
-            data_list.append((record[0], record[1], record[2], record[3], tmp))
+        data_list = [
+            record[:4] + (coordinate_to_osm(record[4], record[5]),)
+            for record in db_records
+]
         return data_headers, data_list, source_path
     else:
         logfunc('No Data')
@@ -139,10 +131,7 @@ def cff_search_history(files_found, _report_folder, _seeker, _wrap_text):
     source_path = get_file_path(files_found, "SbbMobile.db")
     data_list = []
 
-    for file_found in files_found:
-        file_found = str(file_found)
-
-    if files_found[0].endswith('SbbMobile.db'):
+    if  not source_path:
         query = '''
                 SELECT
                 datetime(timestamp/1000, 'unixepoch', 'localtime'),
@@ -169,14 +158,13 @@ def cff_search_history(files_found, _report_folder, _seeker, _wrap_text):
         '''
 
         data_headers = ('Search timestamp', "Departure", "Departure (type)", "Destination", "Destination (type)", "location of search (link)")
-        db_records = get_sqlite_db_records(files_found[0], query)
+        db_records = get_sqlite_db_records(source_path, query)
 
-        for record in db_records:
-            if record[5] and record[6]:
-                tmp = coordinate_to_osm(record[5], record[6])
-                data_list.append((record[0], record[1], record[2], record[3], record[4], tmp))
-            else:
-                data_list.append((record[0], record[1], record[2], record[3], record[4], ""))
+        data_list = [
+            record[:5] + ((coordinate_to_osm(record[5], record[6]),) if record[5] and record[6] else ("",))
+            for record in db_records
+        ]
+
         return data_headers, data_list, source_path
     else:
         logfunc('No Data')
@@ -186,10 +174,7 @@ def cff_travel_cards(files_found, _report_folder, _seeker, _wrap_text):
     source_path = get_file_path(files_found, "SbbMobile.db")
     data_list = []
 
-    for file_found in files_found:
-        file_found = str(file_found)
-
-    if files_found[0].endswith('SbbMobile.db'):
+    if  not source_path:
         query = '''
             SELECT
                 name,
@@ -203,10 +188,9 @@ def cff_travel_cards(files_found, _report_folder, _seeker, _wrap_text):
         '''
 
         data_headers = ('Name', "Type", "Contract ID", "Valid From", "Valid To", "Contract state")
-        db_records = get_sqlite_db_records(files_found[0], query)
+        db_records = get_sqlite_db_records(source_path, query)
 
-        for record in db_records:
-            data_list.append((record[0], record[1], record[2], record[3], record[4], record[5]))
+        data_list = [record[:6] for record in db_records]
         return data_headers, data_list, source_path
     else:
         logfunc('No Data')
