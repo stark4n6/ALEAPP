@@ -8,7 +8,7 @@ __artifacts_v2__ = {
         "requirements": "none",
         "category": "Travel",
         "notes": "",
-        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db'),
+        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db*'),
         "output_types": "standard",
         "html_columns": ['location of places (link)'],
         "artifact_icon": "search"
@@ -22,7 +22,7 @@ __artifacts_v2__ = {
         "requirements": "none",
         "category": "Travel",
         "notes": "",
-        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db'),
+        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db*'),
         "output_types": "standard",
         "html_columns": ['location of search (link)'],
         "artifact_icon": "search"
@@ -36,7 +36,7 @@ __artifacts_v2__ = {
         "requirements": "none",
         "category": "Travel",
         "notes": "",
-        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db'),
+        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db*'),
         "output_types": "standard",
         "artifact_icon": "user"
     },
@@ -49,7 +49,7 @@ __artifacts_v2__ = {
         "requirements": "none",
         "category": "Travel",
         "notes": "",
-        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db'),
+        "paths": ('*/data/ch.sbb.mobile.*/databases/SbbMobile.db*'),
         "output_types": "standard",
         "artifact_icon": "star"
     }
@@ -65,9 +65,9 @@ def cff_purchased_tickets(files_found, _report_folder, _seeker, _wrap_text):
     if source_path:
         query = '''
             SELECT
-                traveler,
                 validFrom,
                 validUntil,
+				traveler,
                 CASE 
                     WHEN refundState == "NORMAL" THEN "Not Refunded"
                     WHEN refundState == "COMPLETE" THEN "Refunded"
@@ -81,7 +81,7 @@ def cff_purchased_tickets(files_found, _report_folder, _seeker, _wrap_text):
                 PurchasedTickets
         '''
 
-        data_headers = ('Traveler', "Valid from", "Valid until", "is Refunded", "Payment method", "Ticket description", "Ticket departure", "Ticket destination")
+        data_headers = ("Valid from", "Valid until", "Traveler", "is Refunded", "Payment method", "Ticket description", "Ticket departure", "Ticket destination")
         db_records = get_sqlite_db_records(source_path, query)
 
         return data_headers, db_records, source_path
@@ -115,7 +115,7 @@ def cff_searched_places(files_found, _report_folder, _seeker, _wrap_text):
                 SearchedPlaces
         '''
 
-        data_headers = ('Searched timestamp', "Title", "Is favorite", "Type", "location of places (link)")
+        data_headers = ("Searched timestamp", "Title", "Is favorite", "Type", "location of places (link)")
         db_records = get_sqlite_db_records(source_path, query)
 
         data_list = [
@@ -157,7 +157,7 @@ def cff_search_history(files_found, _report_folder, _seeker, _wrap_text):
                 SearchHistory
         '''
 
-        data_headers = ('Search timestamp', "Departure", "Departure (type)", "Destination", "Destination (type)", "location of search (link)")
+        data_headers = ("Search timestamp", "Departure", "Departure (type)", "Destination", "Destination (type)", "location of search (link)")
         db_records = get_sqlite_db_records(source_path, query)
 
         data_list = [
@@ -187,7 +187,7 @@ def cff_travel_cards(files_found, _report_folder, _seeker, _wrap_text):
                 SwissPassTravelCards
         '''
 
-        data_headers = ('Name', "Type", "Contract ID", "Valid From", "Valid To", "Contract state")
+        data_headers = ("Name", "Type", "Contract ID", "Valid From", "Valid To", "Contract state")
         db_records = get_sqlite_db_records(source_path, query)
 
         data_list = [record[:6] for record in db_records]
