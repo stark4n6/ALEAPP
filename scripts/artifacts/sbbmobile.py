@@ -115,7 +115,7 @@ def cff_searched_places(files_found, _report_folder, _seeker, _wrap_text):
                 SearchedPlaces
         '''
 
-        data_headers = ("Searched timestamp", "Title", "Is favorite", "Type", "location of places (link)")
+        data_headers = (("Searched timestamp", "datetime"), "Title", "Is favorite", "Type", "location of places (link)")
         db_records = get_sqlite_db_records(source_path, query)
 
         data_list = [
@@ -157,7 +157,7 @@ def cff_search_history(files_found, _report_folder, _seeker, _wrap_text):
                 SearchHistory
         '''
 
-        data_headers = ("Search timestamp", "Departure", "Departure (type)", "Destination", "Destination (type)", "location of search (link)")
+        data_headers = (("Search timestamp", "datetime"), "Departure", "Departure (type)", "Destination", "Destination (type)", "location of search (link)")
         db_records = get_sqlite_db_records(source_path, query)
 
         data_list = [
